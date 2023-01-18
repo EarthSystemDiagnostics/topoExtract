@@ -81,7 +81,48 @@ The `topoExtract` function needs the following input:
 * sampling_distance_m - sampling distance in meters
 
 ``` r
+source("topoExtract.R")
+
 start <- matrix(c(0, -75), ncol = 2, nrow = 1) ## Kohnen Station 
 
 topo_traj <- topoExtract(start, dm_proxy, vel_proxy, 100*1000, 500)
 ```
+
+The function provides a 'tibble' with coordinates (*lon*, *lat*), extracted elevation *elev*, the velocity values (*vx*, *vy*), the distance from the start in meter (*dist*), the direction from each point to the next in degrees (*dir*) and the *speed* of the ice-flow in m/yr. 
+
+```r
+topo_traj_sf <- res %>% st_as_sf(coords = c("lon", "lat")) %>% 
+                  st_set_crs(4326) %>% st_transform(st_crs(dm_proxy))
+
+elev_sub <- dm_proxy %>% st_crop(st_bbox(topo_traj_sf) %>% st_as_sfc())
+
+traj_pl <- ggplot(data = st_bbox(topo_traj_sf) %>% st_as_sfc()) +
+    geom_sf(fill = NA, colour = NA) +
+    geom_stars(data = elev_sub %>% setNames("Elevation")) + 
+    scale_fill_viridis_c(option = "plasma") + 
+    geom_sf(data = topo_traj_sf,
+            mapping = aes(geometry = geometry), 
+            shape = 19, size = 1.5) +
+    theme_light() +
+    scale_x_continuous(name="") +
+    scale_y_continuous(name="") +
+    theme(axis.text = element_text(size = 10))
+
+extr_plot <- ggplot(res %>% dplyr::select(c("dist", "elev", "speed")) %>% pivot_longer(cols = -dist),
+         aes(x = dist, y = value)) + geom_line() +
+              facet_wrap(vars(name), scales = "free_y")
+
+ggpubr::ggarrange(traj_pl, extr_plot, ncol = 2, nrow = 1)
+```
+
+<center>
+
+<img src="img/img2.png"></img>
+
+<figcaption>
+
+Figure 2: Results of `topoExtract', with the simulated trajectory, the extracted elevation and speed of the ice-flow.
+
+</figcaption>
+
+</center>
