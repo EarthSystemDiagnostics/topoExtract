@@ -6,11 +6,11 @@ The aim of topoExtract is to extract interpolated elevation values from a digita
 ### REMA Mosaic v1.1 200m (filled)
 
 The Reference Elevation Model of Antarctica (REMA) is a high resolution, time-stamped Digital Surface Model (DSM) of Antarctica.
-Downloaded from [here](https://data.pgc.umn.edu/elev/dem/setsm/REMA/mosaic/v1.1/200m/)
+Downloaded from [here](https://data.pgc.umn.edu/elev/dem/setsm/REMA/mosaic/v1.1/200m/).
 
 ### MEaSUREs Phase-Based Antarctica Ice Velocity Map, Version 1 (450 m)
 This data set, as part of the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) Program, combines interferometric phases from multiple satellite interferometric synthetic-aperture radar systems to derive the first comprehensive phase-based map of Antarctic ice velocity. 
-Downloaded from [here](https://n5eil01u.ecs.nsidc.org/MEASURES/NSIDC-0754.001/)
+Downloaded from [here](https://n5eil01u.ecs.nsidc.org/MEASURES/NSIDC-0754.001/).
 
 The downloaded dataset containts 10 variables in a netcdf format. I extracted vx and vz values and transferred them into a geotif for better and faster data handling with the R package `stars`.
 
@@ -69,3 +69,19 @@ Figure 1: The three datasets: A) Elevation, B) Ice velocity in x, C) Ice velocit
 </figcaption>
 
 </center>
+
+## `topoExtract` function
+
+The `topoExtract` function needs the following input:
+
+* p - starting position (matrix with 2 columns (x, y) and 1 row)
+* dm_proxy - the elevation `stars_proxy` object
+* vel_proxy - the ice velocity `stars_proxy` object
+* traj_length_m - length of the trajectory in meters
+* sampling_distance_m - sampling distance in meters
+
+``` r
+start <- matrix(c(0, -75), ncol = 2, nrow = 1) ## Kohnen Station 
+
+topo_traj <- topoExtract(start, dm_proxy, vel_proxy, 100*1000, 500)
+```
