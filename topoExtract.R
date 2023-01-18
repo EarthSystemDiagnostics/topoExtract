@@ -7,20 +7,10 @@
 ##' @param ...
 ##' @return a data.frame with location, distance, elevation, speed and direction.
 ##' @export
-# topoExtract <- function(p, dm_proxy,  vel_proxy, traj_length_m, sampling_distance_m, interpolate = TRUE) {
+topoExtract <- function(p, dm_proxy,  vel_proxy, traj_length_m, sampling_distance_m, interpolate = TRUE) {
 
 invisible(lapply(c("sf", "stars", "dplyr", "geosphere"), require, 
                  character.only = TRUE))
-
-  # p         <- matrix(c(0, -75), ncol = 2, nrow = 1) 
-  # dm_proxy  <- st.dm <- stars::read_stars("~/Documents/data/REMA_200m_dem_filled.tiff", proxy = T) %>%
-                    # st_set_crs("+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
-  # vel_proxy <- stars::read_stars("~/Documents/data/antarctic_ice_vel_phase_map_v01.tif", proxy = T)
-  
-  
-  # traj_length_m        <- 100*1000
-  # sampling_distance_m  <- 500
-  # interpolate          <- TRUE
 
   start <- st_point(p) %>% st_sfc() %>% st_set_crs(4326) 
 
