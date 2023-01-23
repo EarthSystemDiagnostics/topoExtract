@@ -9,8 +9,9 @@
 ##' @export
 topoExtract <- function(p, dm_proxy,  vel_proxy, traj_length_m, sampling_distance_m, interpolate = TRUE) {
 
-invisible(lapply(c("sf", "stars", "dplyr", "geosphere"), require, 
+  invisible(lapply(c("sf", "stars", "dplyr", "geosphere"), require, 
                  character.only = TRUE))
+  invisible(sf_use_s2(FALSE))
 
   start <- st_point(p) %>% st_sfc() %>% st_set_crs(4326) 
 

@@ -15,10 +15,12 @@ Downloaded from [here](https://n5eil01u.ecs.nsidc.org/MEASURES/NSIDC-0754.001/).
 The downloaded dataset containts 10 variables in a netcdf format. I extracted vx and vz values and transferred them into a geotif for better and faster data handling with the R package `stars`.
 
 ``` r
-library(stars)
+library(raster)
 
-nc_file <- read_ncdf("antarctic_ice_vel_phase_map_v01.nc", var = c("VX", "VY"), 
-                     proxy = FALSE)
+nc_file <- stack(raster("antarctic_ice_vel_phase_map_v01.nc", varname = "VX"),
+                 raster("antarctic_ice_vel_phase_map_v01.nc", varname = "VY")) %>% st_as_stars()
+
+# plot(nc_file)
 write_stars(nc_file, "antarctic_ice_vel_phase_map_v01.tif")
 ```
 
@@ -91,7 +93,9 @@ topo_traj <- topoExtract(start, dm_proxy, vel_proxy, 100*1000, 500)
 The function provides a 'tibble' with coordinates (*lon*, *lat*), extracted elevation *elev*, the velocity values (*vx*, *vy*), the distance from the start in meter (*dist*), the direction from each point to the next in degrees (*dir*) and the *speed* of the ice-flow in m/yr. 
 
 ```r
-topo_traj_sf <- res %>% st_as_sf(coords = c("lon", "lat")) %>% 
+library(ggplot2)
+
+topo_traj_sf <- topo_traj %>% st_as_sf(coords = c("lon", "lat")) %>% 
                   st_set_crs(4326) %>% st_transform(st_crs(dm_proxy))
 
 elev_sub <- dm_proxy %>% st_crop(st_bbox(topo_traj_sf) %>% st_as_sfc())
@@ -108,7 +112,7 @@ traj_pl <- ggplot(data = st_bbox(topo_traj_sf) %>% st_as_sfc()) +
     scale_y_continuous(name="") +
     theme(axis.text = element_text(size = 10))
 
-extr_plot <- ggplot(res %>% dplyr::select(c("dist", "elev", "speed")) %>% pivot_longer(cols = -dist),
+extr_plot <- ggplot(topo_traj %>% dplyr::select(c("dist", "elev", "speed")) %>% tidyr::pivot_longer(cols = -dist),
          aes(x = dist, y = value)) + geom_line() +
               facet_wrap(vars(name), scales = "free_y")
 
