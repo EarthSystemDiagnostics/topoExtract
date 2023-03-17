@@ -1,4 +1,4 @@
-# topoExtract
+# topo/slope Extract
 
 The aim of topoExtract is to extract interpolated elevation values from a digital elevation model along a trajectory defined by ice-flow vectors.
 
@@ -8,7 +8,7 @@ The aim of topoExtract is to extract interpolated elevation values from a digita
 The Reference Elevation Model of Antarctica (REMA) is a high resolution, time-stamped Digital Surface Model (DSM) of Antarctica.
 Downloaded from [here](https://data.pgc.umn.edu/elev/dem/setsm/REMA/mosaic/v1.1/200m/).
 
-### MEaSUREs Phase-Based Antarctica Ice Velocity Map, Version 1 (450 m)
+### Measured Phase-Based Antarctica Ice Velocity Map, Version 1 (450 m)
 This data set, as part of the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) Program, combines interferometric phases from multiple satellite interferometric synthetic-aperture radar systems to derive the first comprehensive phase-based map of Antarctic ice velocity. 
 Downloaded from [here](https://n5eil01u.ecs.nsidc.org/MEASURES/NSIDC-0754.001/).
 
@@ -126,6 +126,58 @@ ggpubr::ggarrange(traj_pl, extr_plot, ncol = 2, nrow = 1)
 <figcaption>
 
 Figure 2: Results of `topoExtract', with the simulated trajectory, the extracted elevation and speed of the ice-flow.
+
+</figcaption>
+
+</center>
+
+## `slopeExtract` function
+
+The `slopeExtract` function needs the following input:
+
+* p - starting position (matrix with 2 columns (x, y) and 1 row)
+* dm_proxy - the elevation `stars_proxy` object
+* dir_proxy - the wind direction `stars_proxy` object
+* transect_length - length of transect in meters
+* sample - sample along transect
+* sf - logical, if `TRUE` the functions returns the transect with the wind direction, the underlaying elevation and the slope, if `FALSE`, function returns the slope (slope of linear regression)
+
+``` r
+source("slopeExtract.R")
+dir_proxy <- read_stars("dir_200m.tif", proxy = T)
+
+start <- matrix(c(0, -75), ncol = 2, nrow = 1) ## Kohnen Station 
+(slope <- slopeExtract(start, dm_proxy, dir_proxy))
+
+
+```
+
+Raster approach:
+
+``` r
+pt  <- start %>% st_transform(st_crs(dm_proxy)) %>% st_buffer(40000)
+pts <- dm_proxy[pt] %>% st_as_stars()
+
+crds       <- st_coordinates(pts %>% st_transform(4326))
+crds$slope <- parallel::mclapply(1:nrow(crds), function(x) slopeExtract(crds[x,], dm_proxy, dir_proxy, sf = FALSE), 
+                                mc.cores = 10) %>% unlist()
+
+slope_stars <- crds %>% st_as_sf(coords = c("x", "y"), crs = 4326) %>% st_transform(st_crs(pts)) %>%
+  st_rasterize(template = pts)
+
+ggplot() +
+  geom_stars(data = slope_stars) +
+  scale_fill_continuous(type = "viridis", name = "slope") +
+  theme_minimal()
+```
+
+<center>
+
+<img src="img/img3.png"></img>
+
+<figcaption>
+
+Figure 3: Results of `slopeExtract'.
 
 </figcaption>
 
