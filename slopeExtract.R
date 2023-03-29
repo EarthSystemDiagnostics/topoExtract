@@ -22,7 +22,7 @@ slopeExtract <-  function(p, dm_proxy, dir_proxy, transect_distance = 5000, samp
   if(sf) {
     transect %>% mutate(dm    = st_extract(dm_proxy, transect)[[1]],
                         dir   = st_extract(dir_proxy, transect)[[1]],
-                        slope = summary(lm(dm ~ c(1:nrow(transect))))$coefficients[2,1]) %>%
+                        slope = summary(lm(dm ~ seq(0, transect_distance, length = sample)))$coefficients[2,1]) %>%
                  dplyr::select(dm, dir, slope)
   } else {
     summary(lm(st_extract(dm_proxy, transect)[[1]] ~ c(1:nrow(transect))))$coefficients[2,1]
