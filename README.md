@@ -27,7 +27,9 @@ write_stars(nc_file, "antarctic_ice_vel_phase_map_v01.tif")
 ## Loading datasets as stars_proxy object
 
 ``` r
-library(dplyr)
+library(tidyverse)
+library(stars)
+library(sf)
 
 dm_proxy  <- read_stars("REMA_200m_dem_filled.tiff", proxy = T) %>%
                 st_set_crs("+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
@@ -144,7 +146,7 @@ The `slopeExtract` function needs the following input:
 
 ``` r
 source("slopeExtract.R")
-dir_proxy <- read_stars("dir_200m.tif", proxy = T)
+dir_proxy <- read_stars("~/Documents/data/dir_200m.tif", proxy = T)
 
 start <- matrix(c(0, -75), ncol = 2, nrow = 1) ## Kohnen Station 
 (slope <- slopeExtract(start, dm_proxy, dir_proxy))
@@ -155,11 +157,11 @@ start <- matrix(c(0, -75), ncol = 2, nrow = 1) ## Kohnen Station
 Raster approach:
 
 ``` r
-pt  <- start %>% st_transform(st_crs(dm_proxy)) %>% st_buffer(40000)
+pt  <- st_point(start) %>% st_sfc() %>% st_set_crs(4326) %>% st_transform(st_crs(dm_proxy)) %>% st_buffer(40000)
 pts <- dm_proxy[pt] %>% st_as_stars()
 
-crds       <- st_coordinates(pts %>% st_transform(4326))
-crds$slope <- parallel::mclapply(1:nrow(crds), function(x) slopeExtract(crds[x,], dm_proxy, dir_proxy, sf = FALSE), 
+crds       <- st_coordinates(pts %>% st_transform(4326)) %>% as_tibble()
+crds$slope <- parallel::mclapply(1:nrow(crds), function(x) slopeExtract(as.numeric(crds[x,]), dm_proxy, dir_proxy, sf = FALSE), 
                                 mc.cores = 10) %>% unlist()
 
 slope_stars <- crds %>% st_as_sf(coords = c("x", "y"), crs = 4326) %>% st_transform(st_crs(pts)) %>%
