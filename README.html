@@ -393,7 +393,9 @@ write_stars(nc_file, &quot;antarctic_ice_vel_phase_map_v01.tif&quot;)</code></pr
 </div>
 <div id="loading-datasets-as-stars_proxy-object" class="section level2">
 <h2>Loading datasets as stars_proxy object</h2>
-<pre class="r"><code>library(dplyr)
+<pre class="r"><code>library(tidyverse)
+library(stars)
+library(sf)
 
 dm_proxy  &lt;- read_stars(&quot;REMA_200m_dem_filled.tiff&quot;, proxy = T) %&gt;%
                 st_set_crs(&quot;+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs&quot;)
@@ -499,18 +501,17 @@ slope, if <code>FALSE</code>, function returns the slope (slope of
 linear regression)</li>
 </ul>
 <pre class="r"><code>source(&quot;slopeExtract.R&quot;)
+
 dir_proxy &lt;- read_stars(&quot;dir_200m.tif&quot;, proxy = T)
 
 start &lt;- matrix(c(0, -75), ncol = 2, nrow = 1) ## Kohnen Station 
-(slope &lt;- slopeExtract(start, dm_proxy, dir_proxy))
-
-</code></pre>
+(slope &lt;- slopeExtract(start, dm_proxy, dir_proxy))</code></pre>
 <p>Raster approach:</p>
-<pre class="r"><code>pt  &lt;- start %&gt;% st_transform(st_crs(dm_proxy)) %&gt;% st_buffer(40000)
+<pre class="r"><code>pt  &lt;- st_point(start) %&gt;% st_sfc() %&gt;% st_set_crs(4326) %&gt;% st_transform(st_crs(dm_proxy)) %&gt;% st_buffer(40000)
 pts &lt;- dm_proxy[pt] %&gt;% st_as_stars()
 
-crds       &lt;- st_coordinates(pts %&gt;% st_transform(4326))
-crds$slope &lt;- parallel::mclapply(1:nrow(crds), function(x) slopeExtract(crds[x,], dm_proxy, dir_proxy, sf = FALSE), 
+crds       &lt;- st_coordinates(pts %&gt;% st_transform(4326)) %&gt;% as_tibble()
+crds$slope &lt;- parallel::mclapply(1:nrow(crds), function(x) slopeExtract(as.numeric(crds[x,]), dm_proxy, dir_proxy, sf = FALSE), 
                                 mc.cores = 10) %&gt;% unlist()
 
 slope_stars &lt;- crds %&gt;% st_as_sf(coords = c(&quot;x&quot;, &quot;y&quot;), crs = 4326) %&gt;% st_transform(st_crs(pts)) %&gt;%

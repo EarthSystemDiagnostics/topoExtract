@@ -146,12 +146,11 @@ The `slopeExtract` function needs the following input:
 
 ``` r
 source("slopeExtract.R")
-dir_proxy <- read_stars("~/Documents/data/dir_200m.tif", proxy = T)
+
+dir_proxy <- read_stars("dir_200m.tif", proxy = T)
 
 start <- matrix(c(0, -75), ncol = 2, nrow = 1) ## Kohnen Station 
 (slope <- slopeExtract(start, dm_proxy, dir_proxy))
-
-
 ```
 
 Raster approach:
